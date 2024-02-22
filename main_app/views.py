@@ -18,9 +18,7 @@ def get_data(request):
         paginator = PageNumberPagination()
         paginator.page_size = 10
         search=request.GET['search']
-        
         uploaded_date_order= 'fd1.created_at asc' if request.GET['uploaded_date'] == 'true' else 'fd1.created_at desc'
-
         sql='''select
                 *,to_char(created_at::timestamp at TIME zone 'UTC' at TIME zone 'Asia/Kolkata','DD-MM-YYYY') created_at,
                 fd1.id
@@ -40,8 +38,6 @@ def get_data(request):
                     fd1.id::text = t2.id::text
                     where batch_number ilike '%{}%' or fd1.file_name ilike '%{}%'
                     order by {};'''.format(search,search,uploaded_date_order)
-
-
         obj=run_query_for_select(sql)
         result_page = paginator.paginate_queryset(obj, request)
         return paginator.get_paginated_response(result_page)
