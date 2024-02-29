@@ -13,7 +13,11 @@ import qrcode
 from dotenv import load_dotenv
 from datetime import datetime
 
+
 S3_BUCKET_NAME=os.getenv("S3_BUCKET_NAME")
+
+overlay_resize=[]
+background_position=[]
 
 # import datetime
 load_dotenv()
@@ -22,6 +26,19 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 @api_view(['POST'])
 def pdf_process(request):
     try:
+        file_type=(request.data['file_type']).lower().replace(" ","_")
+        match file_type:
+            case "test_certificate":
+                overlay_resize.extend([150,150])
+                background_position.extend([1400,350])
+            case "test_report":
+                overlay_resize.extend([90,90])
+                background_position.extend([1000,200])
+            case _:
+                overlay_resize.extend([150,150])
+                background_position.extend([1400,350])
+                
+        request.data['file_type']=file_type
         sequelizers=FileUploadPDFSequelizers(data=request.data)
         if sequelizers.is_valid():
             obj=sequelizers.save()
@@ -121,12 +138,11 @@ def pdf_to_image(obj):
 
 def embbed_qr_to_image(background_path):
     try:
-        
         background = Image.open(os.path.join(current_directory,'../dump-output',background_path))
         overlay_image_path = "qr_code.png"
         overlay = Image.open(overlay_image_path)
         
-        overlay = overlay.resize((150, 150), Image.Resampling.LANCZOS) 
+        overlay = overlay.resize((int(overlay_resize[0]), int(overlay_resize[1])), Image.Resampling.LANCZOS) 
         overlay = overlay.convert("RGBA")
         overlay_with_transparency = Image.new("RGBA", overlay.size)
 
@@ -135,9 +151,11 @@ def embbed_qr_to_image(background_path):
                 r, g, b, a = overlay.getpixel((x, y))
                 overlay_with_transparency.putpixel((x, y), (r, g, b, int(a * 1)))
 
-        background.paste(overlay_with_transparency, (1400,350), overlay_with_transparency)
+        background.paste(overlay_with_transparency, (int(background_position[0]),int(background_position[1])), overlay_with_transparency)
         background.save(os.path.join(current_directory,'../dump-output','{}'.format(background_path)), "PNG")
         print('added QR CODE on image ✔️')
+        overlay_resize.clear()
+        background_position.clear()
         
     except Exception as e:
         print('error in embbed_qr_to_image',e)

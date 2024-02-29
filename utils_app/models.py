@@ -10,6 +10,7 @@ class FileUploadPDF(models.Model):
     id=models.UUIDField(primary_key=True,default=uuid.uuid4, editable=True,)    
     pdf_loc = models.FileField(blank=True, null=True, upload_to=upload_original_qr_pdf)
     batch_number=models.CharField(max_length=50, null=True)
+    file_type=models.CharField(max_length=50, null=True)
     file_name = models.CharField(max_length=50, null=True)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
