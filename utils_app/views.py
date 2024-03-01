@@ -45,7 +45,7 @@ def pdf_process(request):
             return_value=compute(obj)
         return Response({'status_code':200,'data':return_value})
     except Exception as e:
-        print(e)
+        print("error in pdf_procesS",e)
         return Response({'status_code':400})
 
 @api_view(['POST'])

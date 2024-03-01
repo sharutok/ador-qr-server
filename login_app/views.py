@@ -44,6 +44,8 @@ def verify_user(request):
                         {
                             "status": 200,
                             "emp_no": serializers.data["id"],
+                            "emp_id":serializers.data["emp_id"],
+                            "file_type":serializers.data["file_upload_type"]
                         },
                     )
                 else:
