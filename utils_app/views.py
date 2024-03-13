@@ -29,14 +29,14 @@ def pdf_process(request):
         file_type=(request.data['file_type']).lower().replace(" ","_")
         match file_type:
             case "test_certificate":
-                overlay_resize.extend([150,150])
-                background_position.extend([1400,350])
+                overlay_resize.extend([120,120])
+                background_position.extend([1400, 400])
             case "test_report":
                 overlay_resize.extend([90,90])
                 background_position.extend([1000,200])
             case _:
-                overlay_resize.extend([150,150])
-                background_position.extend([1400,350])
+                overlay_resize.extend([120,120])
+                background_position.extend([1400, 400])
                 
         request.data['file_type']=file_type
         sequelizers=FileUploadPDFSequelizers(data=request.data)
@@ -268,7 +268,11 @@ def generate_presigned_url_embedded_pdf(id):
     s3_client = boto3.client('s3')
     presigned_url = s3_client.generate_presigned_url(
         'get_object',
-        Params={'Bucket': bucket_name, 'Key': object_key},
+        Params={
+            'Bucket': bucket_name,
+            'Key': object_key,
+            'ResponseContentType': 'application/pdf'
+            },
         ExpiresIn=300
     )
     return presigned_url
