@@ -4,7 +4,7 @@ from main_app.sequelizers import AccessModelSequelizers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from utils_app.models import FileUploadPDF
-from utils_app.views import generate_presigned_url_embedded_pdf
+from utils_app.views import generate_presigned_url_embedded_img, generate_presigned_url_embedded_pdf
 from utils_app.sequelizers import FileUploadPDFSequelizers
 from rest_framework.pagination import PageNumberPagination
 from login_app.models import AdminUsers
@@ -54,8 +54,10 @@ def download_original_pdf(request):
             sequelizers=AccessModelSequelizers(data=request.data)
             if sequelizers.is_valid():
                 sequelizers.save()
-                link=generate_presigned_url_embedded_pdf(_id)
-                return Response({"data":link,'status_code':200})
+                pdf_link=generate_presigned_url_embedded_pdf(_id)
+                img_link=generate_presigned_url_embedded_img(_id)
+                print(img_link)
+                return Response({"data":[pdf_link,img_link],'status_code':200})
             else:
                 print('not valid')
                 return Response(False)

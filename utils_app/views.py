@@ -81,15 +81,28 @@ def download_embedded_pdf(request):
     except Exception as e:
         print('error in generate_presigned_url_embedded_pdf')
         return Response({'status_code':400})    
-        
+
+@api_view(['GET'])
+def download_embedded_img(request):
+    try:
+        id=request.GET['id']
+        link=generate_presigned_url_embedded_img(id)
+        return Response({'data':link,'status_code':200})    
+    except Exception as e:
+        print('error in generate_presigned_url_embedded_pdf')
+        return Response({'status_code':400})    
+
+# ------------------------------------------------------------------------------------------------------------
 
 def compute_1(obj):
     try:
         #STEP 1 convert pdf to img
         image_name=pdf_to_image(obj)    
+        
         #STEP 2 convert text to img
         ocr_text=image_to_text(image_name)
         os.remove(os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1])))
+        
         # os.remove(os.path.join(current_directory,'../media/qr-code-test-certificate-inhouse-original-pdf/{}'.format(obj.id),"{}".format(str(obj.file_name))))
         FileUploadPDF.objects.filter(id=obj.id).delete()
         return ocr_text
@@ -231,10 +244,14 @@ def upload_file_to_s3(obj):
 
         
         embedded_pdf_file_path=os.path.join(current_directory,'../dump-output',"{}.pdf".format(str(obj.pdf_loc).split('/')[1]))
+        embedded_img_file_path=os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1]))
+
         s3.upload_file(embedded_pdf_file_path,S3_BUCKET_NAME,"{}/{}.pdf".format('qr-code-test-certificate-inhouse-embeded-pdf',str(obj.pdf_loc).split('/')[1]))
+        s3.upload_file(embedded_img_file_path,S3_BUCKET_NAME,"{}/{}.png".format('qr-code-test-certificate-inhouse-embeded-pdf',str(obj.pdf_loc).split('/')[1]))
+        
 
         # delete the img file created
-        os.remove(os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1])))
+        # os.remove(os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1])))
         
     except Exception as e:
         print(f"Error uploading file: {e}")
@@ -271,9 +288,26 @@ def generate_presigned_url_embedded_pdf(id):
         Params={
             'Bucket': bucket_name,
             'Key': object_key,
-            'ResponseContentType': 'application/pdf'
+            # 'ResponseContentType': 'application/pdf'
             },
-        ExpiresIn=300
+        ExpiresIn=3000
+    )
+    return presigned_url
+
+def generate_presigned_url_embedded_img(id):
+    s3_url = 's3://{}/qr-code-test-certificate-inhouse-embeded-pdf/{}.png'.format(S3_BUCKET_NAME,id)
+    split_url = s3_url.split('/')
+    bucket_name = split_url[2]
+    object_key = '/'.join(split_url[3:])
+    s3_client = boto3.client('s3')
+    presigned_url = s3_client.generate_presigned_url(
+        'get_object',
+        Params={
+            'Bucket': bucket_name,
+            'Key': object_key,
+            'ResponseContentType': 'image/png'
+            },
+        ExpiresIn=3000
     )
     return presigned_url
 
