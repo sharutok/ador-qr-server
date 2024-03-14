@@ -242,16 +242,14 @@ def upload_file_to_s3(obj):
         original_pdf_file_path = os.path.join(current_directory,'../media',str(obj.pdf_loc))
         s3.upload_file(original_pdf_file_path,S3_BUCKET_NAME ,"{}/{}/{}".format(str(obj.pdf_loc).split('/')[0],str(obj.pdf_loc).split('/')[1],str(obj.pdf_loc).split('/')[2]) )
 
-        
         embedded_pdf_file_path=os.path.join(current_directory,'../dump-output',"{}.pdf".format(str(obj.pdf_loc).split('/')[1]))
         embedded_img_file_path=os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1]))
 
         s3.upload_file(embedded_pdf_file_path,S3_BUCKET_NAME,"{}/{}.pdf".format('qr-code-test-certificate-inhouse-embeded-pdf',str(obj.pdf_loc).split('/')[1]))
         s3.upload_file(embedded_img_file_path,S3_BUCKET_NAME,"{}/{}.png".format('qr-code-test-certificate-inhouse-embeded-pdf',str(obj.pdf_loc).split('/')[1]))
-        
 
         # delete the img file created
-        # os.remove(os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1])))
+        os.remove(os.path.join(current_directory,'../dump-output',"{}.png".format(str(obj.pdf_loc).split('/')[1])))
         
     except Exception as e:
         print(f"Error uploading file: {e}")
@@ -283,11 +281,16 @@ def generate_presigned_url_embedded_pdf(id):
     bucket_name = split_url[2]
     object_key = '/'.join(split_url[3:])
     s3_client = boto3.client('s3')
+    
+    custom_filename="QR_{}.pdf".format(id)
+    
     presigned_url = s3_client.generate_presigned_url(
         'get_object',
         Params={
             'Bucket': bucket_name,
             'Key': object_key,
+            'ResponseContentDisposition': f'attachment; filename="{custom_filename}"'
+
             # 'ResponseContentType': 'application/pdf'
             },
         ExpiresIn=3000
